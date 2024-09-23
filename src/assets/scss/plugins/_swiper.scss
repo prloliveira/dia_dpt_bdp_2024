@@ -9,8 +9,8 @@
     backdrop-filter: blur(2px);
     border-radius: 8px;
     &::after {
-        font-family: remixicon;
-        font-size: 28px;
+        font-family: remixicon !important;
+        font-size: 28px !important;
         color: rgba(var(--#{$prefix}primary-rgb), 1);
         transition: all 0.3s ease;
     }

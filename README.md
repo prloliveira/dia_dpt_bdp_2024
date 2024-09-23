@@ -1,2 +1,2 @@
-# velzon-svelte
-velzon-svelte
+# velzon-typescript
+velzon-typescript

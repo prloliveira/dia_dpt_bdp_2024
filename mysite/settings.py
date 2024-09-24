@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-3@ri3i9vx9k(*xy8^76821wg#!*b(_&v)*cmwemb6#s4tq&e1x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['bdp.lopesol.pt']
+ALLOWED_HOSTS = []
 TAILWIND_APP_NAME = 'theme'
 
 # Application definition

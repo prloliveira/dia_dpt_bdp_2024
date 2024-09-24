@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-3@ri3i9vx9k(*xy8^76821wg#!*b(_&v)*cmwemb6#s4tq&e1x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+
 TAILWIND_APP_NAME = 'theme'
 
 # Application definition
@@ -128,8 +128,11 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
+#INTERNAL_IPS = [
+#    "127.0.0.1",
+#]
 
-NPM_BIN_PATH="C:/Users/BPU316938/AppData/Roaming/npm/npm.cmd"
+#NPM_BIN_PATH="C:/Users/BPU316938/AppData/Roaming/npm/npm.cmd"
+
+
+ALLOWED_HOSTS = ['*']

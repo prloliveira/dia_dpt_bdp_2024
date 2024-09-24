@@ -134,5 +134,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 #NPM_BIN_PATH="C:/Users/BPU316938/AppData/Roaming/npm/npm.cmd"
 
-ALLOWED_HOSTS = []
-ALLOWED_HOSTS += ['*']
+ALLOWED_HOSTS = ["bdp.lopesol.pt", "localhost", "127.0.0.1"]

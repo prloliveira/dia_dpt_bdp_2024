@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Data</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .tab {
+            display: none; /* Hide all tabs by default */
+        }
+
+        .tab-button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: none;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-button.active {
+            background-color: #ddd;
+            border-bottom: 2px solid #007BFF; /* Active tab color */
+        }
+
+        .tab-content {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Interactive Gráficos</h2>
+    <div>
+        <button class="tab-button active" onclick="showTab('decade')">Decades</button>
+        <button class="tab-button" onclick="showTab('department')">Department</button>
+        <button class="tab-button" onclick="showTab('gender')">Gender</button>
+        <button class="tab-button" onclick="showTab('function')">Function</button>
+    </div>
+
+    <div id="decade" class="tab tab-content"></div>
+    <div id="department" class="tab tab-content"></div>
+    <div id="gender" class="tab tab-content"></div>
+    <div id="function" class="tab tab-content"></div>
+
+    <script>
+        // Function to show the selected tab and hide others
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.style.display = 'none';
+            });
+
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show the selected tab and mark the button as active
+            document.getElementById(tabName).style.display = 'block';
+            document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+
+        // Function to render charts
+        function renderCharts() {
+            fetch("{% url 'bar_chart_data' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const decades = data.decades;
+
+                    // Prepare traces for decades
+                    const decadeTraces = Object.keys(data.data_per_area.decade).map(area => {
+                        return {
+                            x: decades,
+                            y: data.data_per_area.decade[area],
+                            name: area,
+                            type: 'bar'
+                        };
+                    });
+
+                    // Prepare traces for department
+                    const departmentTraces = Object.keys(data.data_per_area.department).map(area => {
+                        return {
+                            x: [area],
+                            y: [data.data_per_area.department[area]],
+                            name: area,
+                            type: 'bar'
+                        };
+                    });
+
+                    // Prepare traces for gender
+                    const genderTraces = [];
+                    for (const [gender, areas] of Object.entries(data.data_per_area.gender)) {
+                        for (const [area, count] of Object.entries(areas)) {
+                            genderTraces.push({
+                                x: [area],
+                                y: [count],
+                                name: gender,
+                                type: 'bar'
+                            });
+                        }
+                    }
+
+                    // Prepare traces for function
+                    const functionTraces = [];
+                    for (const [func, areas] of Object.entries(data.data_per_area.function)) {
+                        for (const [area, count] of Object.entries(areas)) {
+                            functionTraces.push({
+                                x: [area],
+                                y: [count],
+                                name: func,
+                                type: 'bar'
+                            });
+                        }
+                    }
+
+                    // Plotting charts
+                    Plotly.newPlot('decade', decadeTraces, { title: 'Decades Data', barmode: 'group' });
+                    Plotly.newPlot('department', departmentTraces, { title: 'Department Data', barmode: 'group' });
+                    Plotly.newPlot('gender', genderTraces, { title: 'Gender Data', barmode: 'group' });
+                    Plotly.newPlot('function', functionTraces, { title: 'Function Data', barmode: 'group' });
+
+                    // Initially show the first tab
+                    showTab('decade');
+                });
+        }
+
+        // Call the function to render charts on page load
+        renderCharts();
+    </script>
+</body>
+</html>

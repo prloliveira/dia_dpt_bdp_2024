@@ -99,19 +99,14 @@ def bar_chart_data_view(request):
         data_per_area['department'][area] = count
 
     # Count users by gender
-    for gender in ['M', 'F']:
-        for area in areas:
-            count = UserData.objects.filter(gender=gender, unit_area=area).count()
-            if gender == 'M':
-                data_per_area['gender']['Masculino'][area] = count
-            else:
-                data_per_area['gender']['Feminino'][area] = count
+    for area in areas:
+        data_per_area['gender']['Masculino'][area] = UserData.objects.filter(gender='M', unit_area=area).count()
+        data_per_area['gender']['Feminino'][area] = UserData.objects.filter(gender='F', unit_area=area).count()
 
     # Count users by function
     for func, func_name in [('E', 'Estagiário'), ('T', 'Técnico'), ('C', 'Coordenador'), ('D', 'Direção')]:
         for area in areas:
-            count = UserData.objects.filter(function=func, unit_area=area).count()
-            data_per_area['function'][func_name][area] = count
+            data_per_area['function'][func_name][area] = UserData.objects.filter(function=func, unit_area=area).count()
 
     # Prepare the response data
     data = {
@@ -120,6 +115,7 @@ def bar_chart_data_view(request):
     }
 
     return JsonResponse(data)
+
 
 
 def create_dummy_data(request):

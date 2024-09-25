@@ -64,70 +64,102 @@
             document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.add('active');
         }
 
-        // Function to render charts
-        function renderCharts() {
-            fetch("{% url 'bar_chart_data' %}")
-                .then(response => response.json())
-                .then(data => {
-                    const decades = data.decades;
 
-                    // Prepare traces for decades
-                    const decadeTraces = Object.keys(data.data_per_area.decade).map(area => {
-                        return {
-                            x: decades,
-                            y: data.data_per_area.decade[area],
-                            name: area,
-                            type: 'bar'
-                        };
-                    });
+    // Define a color palette
+    const colorPalette = {
+        'AAS': '#1f77b4', // Blue
+        'AFI': '#ff7f0e', // Orange
+        'AII': '#2ca02c', // Green
+        'ASB': '#d62728', // Red
+        'DIR': '#9467bd', // Purple
+        'UATP': '#8c564b', // Brown
+        'UPC': '#e377c2', // Pink
+        'Masculino': '#1f77b4', // Blue for Male
+        'Feminino': '#ff7f0e', // Orange for Female
+        'Estagiário': '#2ca02c', // Green for Intern
+        'Técnico': '#d62728', // Red for Technician
+        'Coordenador': '#9467bd', // Purple for Coordinator
+        'Direção': '#8c564b', // Brown for Direction
+    };
 
-                    // Prepare traces for department
-                    const departmentTraces = Object.keys(data.data_per_area.department).map(area => {
-                        return {
-                            x: [area],
-                            y: [data.data_per_area.department[area]],
-                            name: area,
-                            type: 'bar'
-                        };
-                    });
+    // Function to render charts
+    function renderCharts() {
+        fetch("{% url 'bar_chart_data' %}")
+            .then(response => response.json())
+            .then(data => {
+                const decades = data.decades;
 
-                    // Prepare traces for gender
-                    const genderTraces = [];
-                    for (const [gender, areas] of Object.entries(data.data_per_area.gender)) {
-                        for (const [area, count] of Object.entries(areas)) {
-                            genderTraces.push({
-                                x: [area],
-                                y: [count],
-                                name: gender,
-                                type: 'bar'
-                            });
-                        }
-                    }
-
-                    // Prepare traces for function
-                    const functionTraces = [];
-                    for (const [func, areas] of Object.entries(data.data_per_area.function)) {
-                        for (const [area, count] of Object.entries(areas)) {
-                            functionTraces.push({
-                                x: [area],
-                                y: [count],
-                                name: func,
-                                type: 'bar'
-                            });
-                        }
-                    }
-
-                    // Plotting charts
-                    Plotly.newPlot('decade', decadeTraces, { title: 'Decades Data', barmode: 'group' });
-                    Plotly.newPlot('department', departmentTraces, { title: 'Department Data', barmode: 'group' });
-                    Plotly.newPlot('gender', genderTraces, { title: 'Gender Data', barmode: 'group' });
-                    Plotly.newPlot('function', functionTraces, { title: 'Function Data', barmode: 'group' });
-
-                    // Initially show the first tab
-                    showTab('decade');
+                // Prepare traces for decades
+                const decadeTraces = Object.keys(data.data_per_area.decade).map(area => {
+                    return {
+                        x: decades,
+                        y: data.data_per_area.decade[area],
+                        name: area + ' (Decade)',  // Unique name for decade traces
+                        type: 'bar',
+                        marker: { color: colorPalette[area] }
+                    };
                 });
-        }
 
+                // Prepare traces for department
+                const departmentTraces = Object.keys(data.data_per_area.department).map(area => {
+                    return {
+                        x: [area],
+                        y: [data.data_per_area.department[area]],
+                        name: area + ' (Department)',  // Unique name for department traces
+                        type: 'bar',
+                        marker: { color: colorPalette[area] }
+                    };
+                });
+
+                // Prepare traces for gender
+                const genderTraces = [];
+                for (const area of Object.keys(data.data_per_area.gender.Masculino)) {
+                    const maleCount = data.data_per_area.gender['Masculino'][area]; // Get count
+                    const femaleCount = data.data_per_area.gender['Feminino'][area]; // Get count
+
+                    genderTraces.push({
+                        x: [area],
+                        y: [maleCount],
+                        name: 'Masculino in ' + area,  // Unique name for male traces
+                        type: 'bar',
+                        marker: { color: colorPalette['Masculino'] }
+                    });
+
+                    genderTraces.push({
+                        x: [area],
+                        y: [femaleCount],
+                        name: 'Feminino in ' + area,  // Unique name for female traces
+                        type: 'bar',
+                        marker: { color: colorPalette['Feminino'] }
+                    });
+                }
+
+                // Prepare traces for function
+                const functionTraces = [];
+                for (const func of ['Estagiário', 'Técnico', 'Coordenador', 'Direção']) {
+                    for (const area of Object.keys(data.data_per_area.function[func])) {
+                        const count = data.data_per_area.function[func][area]; // Get count
+                        functionTraces.push({
+                            x: [area],
+                            y: [count],
+                            name: func + ' in ' + area,  // Unique name for function traces
+                            type: 'bar',
+                            marker: { color: colorPalette[func] }
+                        });
+                    }
+                }
+
+                // Plotting charts
+                Plotly.newPlot('decade', decadeTraces, { title: 'Decades Data', barmode: 'group' });
+                Plotly.newPlot('department', departmentTraces, { title: 'Department Data', barmode: 'group' });
+                Plotly.newPlot('gender', genderTraces, { title: 'Gender Data', barmode: 'group' });
+                Plotly.newPlot('function', functionTraces, { title: 'Function Data', barmode: 'group' });
+
+                // Initially show the first tab
+                showTab('decade');
+            });
+    
+    }
         // Call the function to render charts on page load
         renderCharts();
     </script>

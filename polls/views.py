@@ -1,9 +1,10 @@
 from datetime import date
+from dateutil.relativedelta import relativedelta
 from django.shortcuts import render
 from .forms import DataCollectionForm
 from django.http import JsonResponse
 from .models import UserData
-from django.db.models import Avg, Count, F
+from django.db.models import Avg, F
 from faker import Faker
 
 def data_collection_view(request):
@@ -17,12 +18,31 @@ def data_collection_view(request):
             return render(request, 'done.html')
     else:
         form = DataCollectionForm()
-        return render(request, 'data_collection.html', {'form': form})
+        max_date = date.today() - relativedelta(years=18)
+        return render(request, 'data_collection.html', {'form': form, 'min_date': '1900-01-01', 'max_date': max_date.strftime('%Y-%m-%d')})
     
-    return render(request, 'data_collection.html', {'form': form})
+    # Assuming everyone is an adult
+    max_date = date.today() - relativedelta(years=18)
+    return render(request, 'data_collection.html', {'form': form, 'min_date': '1900-01-01', 'max_date': max_date.strftime('%Y-%m-%d')})
 
+def create_dummy_data(request):
+    fake = Faker()
+    for _ in range(100):
+        gender = fake.random.choice(['M', 'F'])
+        birth_date = fake.date_of_birth(minimum_age=18, maximum_age=60)  # Adjust age range as needed
+        year_joined = fake.year()
+        unit_area = fake.random.choice([choice[0] for choice in UserData.DAS_CHOICES])
+        function = fake.random.choice(['E', 'T', 'C', 'D'])
 
-
+        user_data = UserData(
+            gender=gender,
+            birth_date=birth_date,
+            year_joined=year_joined,
+            unit_area=unit_area,
+            function=function,
+        )
+        user_data.save()
+    return render(request, 'done.html')
 
 def graph_view(request):
     # a) Quantos técnicos da AFI nasceram na década de 1970?
@@ -58,97 +78,15 @@ def graph_view(request):
     }
     return render(request, 'graph.html', context)
 
-from django.http import JsonResponse
-from django.db.models import Count
-
-from django.http import JsonResponse
-from django.db.models import Count
-
-
-def bar_chart_data_view(request):
-    # Available areas from the DAS_CHOICES field of the UserData model
-    areas = [choice[0] for choice in UserData.DAS_CHOICES]
-
-    # Define decades dynamically (1970, 1980, ..., 2020)
-    decades = [(1970 + i * 10) for i in range(6)]  # From 1970 to 2020
-
-    # Initialize a dictionary to store counts per area for each category
-    data_per_area = {
-        'decade': {},
-        'department': {},
-        'gender': {},
-        'function': {},
-    }
-
-    # Calculate counts for decades
-    for area in areas:
-        counts_per_decade = []
-        for decade in decades:
-            count = UserData.objects.filter(
-                unit_area=area,
-                birth_date__year__gte=decade,
-                birth_date__year__lt=decade + 10
-            ).count()
-            counts_per_decade.append(count)
-        
-        data_per_area['decade'][area] = counts_per_decade
-
-    # Count users per department
-    for area in areas:
-        count = UserData.objects.filter(unit_area=area).count()
-        data_per_area['department'][area] = count
-
-    # Count users by gender
-    for area in areas:
-        data_per_area['gender'][area]['Masculino'] = UserData.objects.filter(gender='M', unit_area=area).count()
-        data_per_area['gender'][area]['Feminino'] = UserData.objects.filter(gender='F', unit_area=area).count()
-    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    print(data_per_area)
-
-    # Count users by function
-    for func, func_name in [('E', 'Estagiário'), ('T', 'Técnico'), ('C', 'Coordenador'), ('D', 'Direção')]:
-        for area in areas:
-            data_per_area['function'][area][func_name] = UserData.objects.filter(function=func, unit_area=area).count()
-
-    # Prepare the response data
-    data = {
-        'decades': decades,
-        'data_per_area': data_per_area
-    }
-
-    return JsonResponse(data)
-
-
-
-def create_dummy_data(request):
-    fake = Faker()
-    for _ in range(100):
-        gender = fake.random.choice(['M', 'F'])
-        birth_date = fake.date_of_birth(minimum_age=18, maximum_age=60)  # Adjust age range as needed
-        year_joined = fake.year()
-        unit_area = fake.random.choice([choice[0] for choice in UserData.DAS_CHOICES])
-        function = fake.random.choice(['E', 'T', 'C', 'D'])
-
-        user_data = UserData(
-            gender=gender,
-            birth_date=birth_date,
-            year_joined=year_joined,
-            unit_area=unit_area,
-            function=function,
-        )
-        user_data.save()
-    return render(request, 'done.html')
-
-
 def chart_data_questions(request):
     # Helper function to calculate age
     def calculate_age(birth_date):
         today = date.today()
         return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
-    
-    direction_members = UserData.objects.filter(unit_area='DIR').order_by('year_joined')
-    min_year, max_year = direction_members.first().year_joined, direction_members.last().year_joined
 
+    # Fetch all users
+    users = UserData.objects.all()
+    
     # Data structures to hold all the data for the charts
     data = {
         'decades': {area[0]: {} for area in UserData.DAS_CHOICES},
@@ -157,20 +95,22 @@ def chart_data_questions(request):
         'before_2010': {area[0]: 0 for area in UserData.DAS_CHOICES},
         'gender_distribution': {area[0]: {'M': 0, 'F': 0} for area in UserData.DAS_CHOICES},
         'interns': {area[0]: 0 for area in UserData.DAS_CHOICES},
-        'direction_membership': {year: 0 for year in range(min_year, max_year+1)}
-    }
+    }  
 
-    # Fetch all users
-    users = UserData.objects.all()
-
+    min_decade, max_decade = 2030, 0
+    
     # Populate data for each chart
     for user in users:
+        
         # 1. Technicians by Decades
         birth_year = user.birth_date.year
-        decade = f'{(birth_year // 10) * 10}s'
-        if decade not in data['decades'][user.unit_area]:
-            data['decades'][user.unit_area][decade] = 0
-        data['decades'][user.unit_area][decade] += 1
+        decade = (birth_year // 10) * 10
+        min_decade = min(decade, min_decade)
+        max_decade = max(decade, max_decade)
+        decade_str = f'{decade}s'
+        if decade_str not in data['decades'][user.unit_area]:
+            data['decades'][user.unit_area][decade_str] = 0
+        data['decades'][user.unit_area][decade_str] += 1            
 
         # 2. Total Technicians per Unit Area
         data['total_technicians'][user.unit_area] += 1
@@ -191,12 +131,16 @@ def chart_data_questions(request):
         if user.function == 'E':  # E stands for 'Estagiário' (Intern)
             data['interns'][user.unit_area] += 1
 
-    for direction_member in direction_members:
-        data['direction_membership'][direction_member.year_joined] += 1
-
+    for area in data['decades']:
+        for decade in range(min_decade, max_decade + 1, 10):
+            decade_str = f'{decade}s'
+            if decade_str not in data['decades'][area]:
+                data['decades'][area][decade_str] = 0
+                
+    print(data['interns'])
+    
     # Calculate the average age for each unit
     for unit, values in data['average_age'].items():
         data['average_age'][unit] = values['total_age'] / values['count'] if values['count'] > 0 else 0
 
     return JsonResponse(data)
-

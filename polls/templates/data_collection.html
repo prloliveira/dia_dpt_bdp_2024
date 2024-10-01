@@ -14,6 +14,7 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
+            margin: 8px;
         }
 
         /* Error styles */
@@ -25,14 +26,13 @@
     </style>
 </head>
 <body class="bg-gray-50 leading-normal tracking-normal">
+    <img src="{% static 'banco.png' %}">
     <div class="container mx-auto px-4">
-        <img src="{% static 'banco.png' %}">
         <section class="flex items-center justify-center h-screen">
             <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
                 <h1 class="text-xl font-semibold mb-6">Recolha de Dados</h1>
                 <form id="dataForm" method="post">
                     {% csrf_token %}
-                    
                     <!-- Gender -->
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm mb-2" for="gender">Sexo</label>
@@ -48,14 +48,14 @@
                     <!-- Birth Date -->
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm mb-2" for="birth_date">Data de nascimento</label>
-                        <input type="date" name="birth_date" id="birth_date" value="{{ form.birth_date.value|default_if_none:'' }}" class="w-full p-2 border border-gray-300 rounded-lg" >
+                        <input type="date" name="birth_date" id="birth_date" value="{{ form.birth_date.value|default_if_none:'' }}" min="{{ min_date }}" max="{{ max_date }}" class="w-full p-2 border border-gray-300 rounded-lg" >
                         <p class="error-message" id="birthdate-error">Por favor, insira a data de nascimento.</p>
                     </div>
 
                     <!-- Year Joined -->
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm mb-2" for="year_joined">Em que ano entrou para o Banco?</label>
-                        <input type="number" name="year_joined" id="year_joined" value="{{ form.year_joined.value|default_if_none:'' }}" class="w-full p-2 border border-gray-300 rounded-lg" min="1900" max="{{ current_year }}" >
+                        <input type="number" name="year_joined" id="year_joined" value="{{ form.year_joined.value|default_if_none:'' }}" class="w-full p-2 border border-gray-300 rounded-lg" min="1950" max="{{ current_year }}" >
                         <p class="error-message" id="yearjoined-error">Por favor, insira o ano em que entrou para o banco.</p>
                     </div>
 
@@ -73,7 +73,7 @@
 
                     <!-- Function -->
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm mb-2" for="function">função</label>
+                        <label class="block text-gray-700 text-sm mb-2" for="function">Função</label>
                         <select name="function" id="function" class="w-full p-2 border border-gray-300 rounded-lg" >
                             <option value="" disabled selected>Selecione a função</option>
                             {% for value, label in form.function.field.choices %}

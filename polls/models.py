@@ -22,11 +22,11 @@ class UserData(models.Model):
         ('D', 'DIREÇÃO'),
     ]
 
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=False, blank=False)
     birth_date = models.DateField()
     year_joined = models.IntegerField()
-    unit_area = models.CharField(max_length=4, choices=DAS_CHOICES)
-    function = models.CharField(max_length=1, choices=DAS_FUNCTION)
+    unit_area = models.CharField(max_length=4, choices=DAS_CHOICES, null=False, blank=False)
+    function = models.CharField(max_length=1, choices=DAS_FUNCTION, null=False, blank=False)
 
     def __str__(self):
         return f"{self.gender}, {self.birth_date}, {self.year_joined}, {self.unit_area}"

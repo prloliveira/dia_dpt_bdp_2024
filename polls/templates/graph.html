@@ -1,3 +1,4 @@
+{% load static tailwind_tags %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -32,16 +33,14 @@
 </head>
 
 <body>
-
-    <h2>Interactive Gráficos</h2>
+    <img src="{% static 'banco.png' %}">
     <div>
-        <button class="tab-button active" onclick="showTab('decades')">Decades</button>
-        <button class="tab-button" onclick="showTab('technicians_asb')">Technicians in ASB</button>
-        <button class="tab-button" onclick="showTab('age_aas')">Average Age in AAS</button>
-        <button class="tab-button" onclick="showTab('before_2010_aii')">AII Before 2010</button>
-        <button class="tab-button" onclick="showTab('gender_uatp')">Gender in UATP</button>
-        <button class="tab-button" onclick="showTab('interns_das')">Interns in DAS</button>
-        <button class="tab-button" onclick="showTab('direction_membership')">Direction Membership</button>
+        <button class="tab-button active" onclick="showTab('decades')">Técnicos por Decada de Nascimento e Área</button>
+        <button class="tab-button" onclick="showTab('technicians_asb')">Técnicos por Área</button>
+        <button class="tab-button" onclick="showTab('age_aas')">Idade Média por Área</button>
+        <button class="tab-button" onclick="showTab('before_2010_aii')">Técnicos Contratados Antes de 2010</button>
+        <button class="tab-button" onclick="showTab('gender_uatp')">Técnicos por Género e Área</button>
+        <button class="tab-button" onclick="showTab('interns_das')">Estagiários por Área</button>
     </div>
 
     <div id="decades" class="tab tab-content" style="display: block;"></div>
@@ -55,13 +54,32 @@
     <script>
         // Function to show the selected tab and hide others
         function showTab(tabName) {
+            // Hide all tabs
+            
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(tab => tab.style.display = 'none');
+            
+            // Remove 'active' class from all buttons
             const buttons = document.querySelectorAll('.tab-button');
             buttons.forEach(button => button.classList.remove('active'));
-            document.getElementById(tabName).style.display = 'block';
+            
+            // Show the selected tab
+            const selectedTab = document.getElementById(tabName);
+            selectedTab.style.display = 'block';
+            
+            // Add 'active' class to the clicked tab button
             document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.add('active');
+            
+            // Resize Plotly charts in the newly displayed tab
+            Plotly.Plots.resize(selectedTab);
         }
+
+        function randomColor() {
+            const r = Math.floor(Math.random() * 256);
+            const g = Math.floor(Math.random() * 256);
+            const b = Math.floor(Math.random() * 256);
+            return `rgb(${r}, ${g}, ${b})`;
+          }
 
         // Fetch and render the graphs
         function fetchAndRenderGraphs() {
@@ -70,7 +88,7 @@
                 .then(data => {
                     // Graph for Decades (highlight AFI born in 1970s)
                     const allDecadesData = Object.keys(data.decades).map(area => ({
-                        x: Object.keys(data.decades[area]), // Decades
+                        x: Object.keys(data.decades[area]).sort(), // Decades
                         y: Object.values(data.decades[area]), // Number of technicians
                         name: area,
                         type: 'bar',
@@ -79,13 +97,13 @@
                         }
                     }));
                     Plotly.newPlot('decades', allDecadesData, {
-                        title: 'Technicians Born in Different Decades for All Areas',
+                        title: 'Técnicos por Decada de Nascimento e Área',
                         barmode: 'group'
                     });
 
                     // Graph for Total Technicians in ASB (highlight ASB)
                     const asbTechniciansData = [{
-                        x: Object.keys(data.total_technicians),
+                        x: Object.keys(data.total_technicians).sort(),
                         y: Object.values(data.total_technicians),
                         type: 'bar',
                         marker: {
@@ -93,13 +111,13 @@
                         }
                     }];
                     Plotly.newPlot('technicians_asb', asbTechniciansData, {
-                        title: 'Total Technicians per Area (Highlight ASB)',
+                        title: 'Técnicos por Área',
                         barmode: 'group'
                     });
 
                     // Graph for Average Age in AAS (show all areas, highlight AAS)
                     const averageAgeData = [{
-                        x: Object.keys(data.average_age),
+                        x: Object.keys(data.average_age).sort(),
                         y: Object.values(data.average_age),
                         type: 'bar',
                         marker: {
@@ -107,13 +125,13 @@
                         }
                     }];
                     Plotly.newPlot('age_aas', averageAgeData, {
-                        title: 'Average Age per Area (Highlight AAS)',
+                        title: 'Idade Média por Área',
                         barmode: 'group'
                     });
 
                     // Graph for AII Technicians before 2010 (show all areas, highlight AII)
                     const aiiBefore2010Data = [{
-                        x: Object.keys(data.before_2010),
+                        x: Object.keys(data.before_2010).sort(),
                         y: Object.values(data.before_2010),
                         type: 'bar',
                         marker: {
@@ -121,15 +139,14 @@
                         }
                     }];
                     Plotly.newPlot('before_2010_aii', aiiBefore2010Data, {
-                        title: 'Technicians Joined Before 2010 (Highlight AII)',
+                        title: 'Técnicos Contratados Antes de 2010',
                         barmode: 'group'
                     });
 
                     // Graph for Gender Distribution in UATP (show all areas, highlight UATP)
-                    console.log(...Object.values(data.gender_distribution))
                     const genderData = Object.keys(data.gender_distribution).map(area =>
                     ({
-                        x: Object.keys(data.gender_distribution[area]),
+                        x: Object.keys(data.gender_distribution[area]).sort(),
                         y: Object.values(data.gender_distribution[area]),
                         name: area,
                         type: 'bar',
@@ -138,46 +155,30 @@
                         }
                     }));
                     Plotly.newPlot('gender_uatp', genderData, {
-                        title: 'Gender Distribution (Highlight UATP)',
+                        title: 'Técnicos por Género e Área',
                         barmode: 'group',
                         yaxis: {
                             tickvals: Array.from({length: Math.max(...Object.values(data.gender_distribution)) + 1}, (_, i) => i)
                         }
                     });
 
-                    // Graph for Interns in DAS (show all areas, highlight DAS)
+                    // Graph for Interns
                     const dasInternsData = [{
-                        x: Object.keys(data.interns),
+                        x: Object.keys(data.interns).sort(),
                         y: Object.values(data.interns),
                         type: 'bar',
                         marker: {
-                            color: Object.keys(data.interns).map(area => area === 'DAS' ? '#e377c2' : '#c7c7c7') // Highlight DAS
+                            color: Object.keys(data.interns).map(() => randomColor())
                         }
                     }];
                     Plotly.newPlot('interns_das', dasInternsData, {
-                        title: 'Interns in Each Area (Highlight DAS)',
+                        title: 'Estagiários por Área',
                         barmode: 'group',
                         yaxis: {
                             tickvals: Array.from({length: Math.max(...Object.values(data.interns)) + 1}, (_, i) => i)
                         }
                     });
 
-                    // Graph for Direction Membership (when the members joined)
-                    console.log(Array.from({length: Math.max(...Object.values(data.direction_membership)) + 1}, (_, i) => i))
-                    const directionMembershipData = [{
-                        x: Object.keys(data.direction_membership),
-                        y: Object.values(data.direction_membership),
-                        type: 'bar',
-                        marker: {
-                            color: '#1f77b4'
-                        },
-                    }];
-                    Plotly.newPlot('direction_membership', directionMembershipData, {
-                        title: 'When Direction Members Joined the Bank',
-                        yaxis: {
-                            tickvals: Array.from({length: Math.max(...Object.values(data.direction_membership)) + 1}, (_, i) => i)
-                        }
-                    });
                 });
         }
 

@@ -76,8 +76,8 @@ def bar_chart_data_view(request):
     data_per_area = {
         'decade': {},
         'department': {},
-        'gender': { 'Masculino': {}, 'Feminino': {} },
-        'function': { 'Estagiário': {}, 'Técnico': {}, 'Coordenador': {}, 'Direção': {} },
+        'gender': {},
+        'function': {},
     }
 
     # Calculate counts for decades
@@ -100,13 +100,15 @@ def bar_chart_data_view(request):
 
     # Count users by gender
     for area in areas:
-        data_per_area['gender']['Masculino'][area] = UserData.objects.filter(gender='M', unit_area=area).count()
-        data_per_area['gender']['Feminino'][area] = UserData.objects.filter(gender='F', unit_area=area).count()
+        data_per_area['gender'][area]['Masculino'] = UserData.objects.filter(gender='M', unit_area=area).count()
+        data_per_area['gender'][area]['Feminino'] = UserData.objects.filter(gender='F', unit_area=area).count()
+    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    print(data_per_area)
 
     # Count users by function
     for func, func_name in [('E', 'Estagiário'), ('T', 'Técnico'), ('C', 'Coordenador'), ('D', 'Direção')]:
         for area in areas:
-            data_per_area['function'][func_name][area] = UserData.objects.filter(function=func, unit_area=area).count()
+            data_per_area['function'][area][func_name] = UserData.objects.filter(function=func, unit_area=area).count()
 
     # Prepare the response data
     data = {
@@ -136,3 +138,65 @@ def create_dummy_data(request):
         )
         user_data.save()
     return render(request, 'done.html')
+
+
+def chart_data_questions(request):
+    # Helper function to calculate age
+    def calculate_age(birth_date):
+        today = date.today()
+        return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    
+    direction_members = UserData.objects.filter(unit_area='DIR').order_by('year_joined')
+    min_year, max_year = direction_members.first().year_joined, direction_members.last().year_joined
+
+    # Data structures to hold all the data for the charts
+    data = {
+        'decades': {area[0]: {} for area in UserData.DAS_CHOICES},
+        'total_technicians': {area[0]: 0 for area in UserData.DAS_CHOICES},
+        'average_age': {area[0]: {'total_age': 0, 'count': 0} for area in UserData.DAS_CHOICES},
+        'before_2010': {area[0]: 0 for area in UserData.DAS_CHOICES},
+        'gender_distribution': {area[0]: {'M': 0, 'F': 0} for area in UserData.DAS_CHOICES},
+        'interns': {area[0]: 0 for area in UserData.DAS_CHOICES},
+        'direction_membership': {year: 0 for year in range(min_year, max_year+1)}
+    }
+
+    # Fetch all users
+    users = UserData.objects.all()
+
+    # Populate data for each chart
+    for user in users:
+        # 1. Technicians by Decades
+        birth_year = user.birth_date.year
+        decade = f'{(birth_year // 10) * 10}s'
+        if decade not in data['decades'][user.unit_area]:
+            data['decades'][user.unit_area][decade] = 0
+        data['decades'][user.unit_area][decade] += 1
+
+        # 2. Total Technicians per Unit Area
+        data['total_technicians'][user.unit_area] += 1
+
+        # 3. Average Age of Technicians per Area
+        age = calculate_age(user.birth_date)
+        data['average_age'][user.unit_area]['total_age'] += age
+        data['average_age'][user.unit_area]['count'] += 1
+
+        # 4. Technicians Joined Before 2010
+        if user.year_joined < 2010:
+            data['before_2010'][user.unit_area] += 1
+
+        # 5. Gender Distribution in each area
+        data['gender_distribution'][user.unit_area][user.gender] += 1
+
+        # 6. Interns in each area
+        if user.function == 'E':  # E stands for 'Estagiário' (Intern)
+            data['interns'][user.unit_area] += 1
+
+    for direction_member in direction_members:
+        data['direction_membership'][direction_member.year_joined] += 1
+
+    # Calculate the average age for each unit
+    for unit, values in data['average_age'].items():
+        data['average_age'][unit] = values['total_age'] / values['count'] if values['count'] > 0 else 0
+
+    return JsonResponse(data)
+

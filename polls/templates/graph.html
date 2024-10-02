@@ -97,7 +97,7 @@
                         }
                     }));
                     Plotly.newPlot('decades', allDecadesData, {
-                        title: 'Técnicos por Decada de Nascimento e Área',
+                        title: 'Quantos técnicos da AFI nasceram na década de 1970?',
                         barmode: 'group'
                     });
 
@@ -111,7 +111,7 @@
                         }
                     }];
                     Plotly.newPlot('technicians_asb', asbTechniciansData, {
-                        title: 'Técnicos por Área',
+                        title: 'Quantos técnicos existem no total na ASB?',
                         barmode: 'group'
                     });
 
@@ -125,7 +125,7 @@
                         }
                     }];
                     Plotly.newPlot('age_aas', averageAgeData, {
-                        title: 'Idade Média por Área',
+                        title: 'Qual é a idade média dos colaboradores da AAS?',
                         barmode: 'group'
                     });
 
@@ -139,7 +139,7 @@
                         }
                     }];
                     Plotly.newPlot('before_2010_aii', aiiBefore2010Data, {
-                        title: 'Técnicos Contratados Antes de 2010',
+                        title: 'Quantos técnicos da AII entraram no banco antes de 2010?',
                         barmode: 'group'
                     });
 
@@ -155,7 +155,7 @@
                         }
                     }));
                     Plotly.newPlot('gender_uatp', genderData, {
-                        title: 'Técnicos por Género e Área',
+                        title: 'Quantos homens e mulheres existem na UATP?',
                         barmode: 'group',
                         yaxis: {
                             tickvals: Array.from({length: Math.max(...Object.values(data.gender_distribution)) + 1}, (_, i) => i)
@@ -172,7 +172,7 @@
                         }
                     }];
                     Plotly.newPlot('interns_das', dasInternsData, {
-                        title: 'Estagiários por Área',
+                        title: 'Quantos estagiários estão no DAS?',
                         barmode: 'group',
                         yaxis: {
                             tickvals: Array.from({length: Math.max(...Object.values(data.interns)) + 1}, (_, i) => i)

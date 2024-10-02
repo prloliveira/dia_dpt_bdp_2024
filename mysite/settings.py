@@ -135,4 +135,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 #NPM_BIN_PATH="C:/Users/BPU316938/AppData/Roaming/npm/npm.cmd"
 
 ALLOWED_HOSTS = ["*"]
-CSRF_TRUSTED_ORIGINS = ["*"]
+CSRF_TRUSTED_ORIGINS = ["https://bdp.lopesol.pt"]

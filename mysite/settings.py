@@ -128,11 +128,11 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-#INTERNAL_IPS = [
-#    "127.0.0.1",
-#]
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
-#NPM_BIN_PATH="C:/Users/BPU316938/AppData/Roaming/npm/npm.cmd"
+NPM_BIN_PATH="npm.cmd"
 
 ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = ["https://bdp.lopesol.pt"]

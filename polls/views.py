@@ -45,38 +45,7 @@ def create_dummy_data(request):
     return render(request, 'done.html')
 
 def graph_view(request):
-    # a) Quantos técnicos da AFI nasceram na década de 1970?
-    afi_1970s = UserData.objects.filter(unit_area='AFI', birth_date__year__gte=1970, birth_date__year__lt=1980).count()
-
-    # b) Quantos técnicos existem no total (presentes) na ASB?
-    asb_total = UserData.objects.filter(unit_area='ASB').count()
-
-    # c) Idade média dos colaboradores da AAS? 
-    current_year = date.today().year
-    aas_mean_age = UserData.objects.filter(unit_area='AAS').annotate(
-        age=current_year - F('birth_date__year')
-    ).aggregate(mean_age=Avg('age'))['mean_age']
-
-    # d) Quantos técnicos da AII entraram no Banco antes de 2010?
-    aii_pre_2010 = UserData.objects.filter(unit_area='AII', year_joined__lt=2010).count()
-
-    # e) Quantas mulheres/homens existem na UATP?
-    uatp_women = UserData.objects.filter(unit_area='UATP', gender='F').count()
-    uatp_men = UserData.objects.filter(unit_area='UATP', gender='M').count()
-
-    # f) Em que ano entraram os membros da Direção para o Banco?
-    direcao_years = UserData.objects.filter(unit_area='DIR').values_list('year_joined', flat=True)
-
-    context = {
-        'afi_1970s': afi_1970s,
-        'asb_total': asb_total,
-        'aas_mean_age': aas_mean_age,
-        'aii_pre_2010': aii_pre_2010,
-        'uatp_women': uatp_women,
-        'uatp_men': uatp_men,
-        'direcao_years': list(direcao_years),
-    }
-    return render(request, 'graph.html', context)
+    return render(request, 'graph.html')
 
 def chart_data_questions(request):
     # Helper function to calculate age
@@ -102,27 +71,28 @@ def chart_data_questions(request):
     # Populate data for each chart
     for user in users:
         
-        # 1. Technicians by Decades
-        birth_year = user.birth_date.year
-        decade = (birth_year // 10) * 10
-        min_decade = min(decade, min_decade)
-        max_decade = max(decade, max_decade)
-        decade_str = f'{decade}s'
-        if decade_str not in data['decades'][user.unit_area]:
-            data['decades'][user.unit_area][decade_str] = 0
-        data['decades'][user.unit_area][decade_str] += 1            
+        if user.function == 'T':
+            # 1. Technicians by Decades
+            birth_year = user.birth_date.year
+            decade = (birth_year // 10) * 10
+            min_decade = min(decade, min_decade)
+            max_decade = max(decade, max_decade)
+            decade_str = f'{decade}s'
+            if decade_str not in data['decades'][user.unit_area]:
+                data['decades'][user.unit_area][decade_str] = 0
+            data['decades'][user.unit_area][decade_str] += 1            
 
-        # 2. Total Technicians per Unit Area
-        data['total_technicians'][user.unit_area] += 1
+            # 2. Total Technicians per Unit Area
+            data['total_technicians'][user.unit_area] += 1
 
-        # 3. Average Age of Technicians per Area
+            # 4. Technicians Joined Before 2010
+            if user.year_joined < 2010:
+                data['before_2010'][user.unit_area] += 1
+        
+        # 3. Average Age of Members per Area
         age = calculate_age(user.birth_date)
         data['average_age'][user.unit_area]['total_age'] += age
         data['average_age'][user.unit_area]['count'] += 1
-
-        # 4. Technicians Joined Before 2010
-        if user.year_joined < 2010:
-            data['before_2010'][user.unit_area] += 1
 
         # 5. Gender Distribution in each area
         data['gender_distribution'][user.unit_area][user.gender] += 1
@@ -136,8 +106,6 @@ def chart_data_questions(request):
             decade_str = f'{decade}s'
             if decade_str not in data['decades'][area]:
                 data['decades'][area][decade_str] = 0
-                
-    print(data['interns'])
     
     # Calculate the average age for each unit
     for unit, values in data['average_age'].items():

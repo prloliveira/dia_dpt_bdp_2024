@@ -39,7 +39,7 @@
         <button class="tab-button" onclick="showTab('technicians_asb')">Técnicos por Área</button>
         <button class="tab-button" onclick="showTab('age_aas')">Idade Média por Área</button>
         <button class="tab-button" onclick="showTab('before_2010_aii')">Técnicos Contratados Antes de 2010</button>
-        <button class="tab-button" onclick="showTab('gender_uatp')">Técnicos por Género e Área</button>
+        <button class="tab-button" onclick="showTab('gender_uatp')">Colaboradores por Género e Área</button>
         <button class="tab-button" onclick="showTab('interns_das')">Estagiários por Área</button>
     </div>
 
@@ -49,7 +49,6 @@
     <div id="before_2010_aii" class="tab tab-content"></div>
     <div id="gender_uatp" class="tab tab-content"></div>
     <div id="interns_das" class="tab tab-content"></div>
-    <div id="direction_membership" class="tab tab-content"></div>
 
     <script>
         // Function to show the selected tab and hide others
@@ -73,13 +72,6 @@
             // Resize Plotly charts in the newly displayed tab
             Plotly.Plots.resize(selectedTab);
         }
-
-        function randomColor() {
-            const r = Math.floor(Math.random() * 256);
-            const g = Math.floor(Math.random() * 256);
-            const b = Math.floor(Math.random() * 256);
-            return `rgb(${r}, ${g}, ${b})`;
-          }
 
         // Fetch and render the graphs
         function fetchAndRenderGraphs() {
@@ -151,7 +143,7 @@
                         name: area,
                         type: 'bar',
                         marker: {
-                            color: area === 'UATP' ? '#2ca02c' : '#c7c7c7' // Highlight UATP
+                            color: area === 'UATP' ? '#f57d52' : '#c7c7c7' // Highlight UATP
                         }
                     }));
                     Plotly.newPlot('gender_uatp', genderData, {
@@ -168,7 +160,7 @@
                         y: Object.values(data.interns),
                         type: 'bar',
                         marker: {
-                            color: Object.keys(data.interns).map(() => randomColor())
+                            color: Object.keys(data.interns).map(area => area === 'UPC' ? '#4248bc' : '#c7c7c7') // Highlight UPC
                         }
                     }];
                     Plotly.newPlot('interns_das', dasInternsData, {
